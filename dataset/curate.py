@@ -1,7 +1,13 @@
 from __future__ import annotations
 import argparse
 import csv
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import pandas as pd
 import config
 from manifest import make_track_id, _norm
@@ -59,7 +65,7 @@ def main() -> None:
     if args.seeds and args.seeds.exists():
         rows += from_seeds_csv(args.seeds)
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows, columns=["artist", "title", "collective"])
     df["track_id"] = [make_track_id(a, t) for a, t in zip(df["artist"], df["title"])]
 
     df["_k"] = [f"{_norm(a)}::{_norm(t)}" for a, t in zip(df["artist"], df["title"])]
