@@ -13,30 +13,35 @@ import config
 from manifest import make_track_id, _norm
 
 
-def from_spotify_playlists(playlist_urls: list[str]) -> list[dict]:
-    import spotipy
-    from spotipy.oauth2 import SpotifyClientCredentials
-
-    sp = spotipy.Spotify(
-        auth_manager=SpotifyClientCredentials(),  # lit SPOTIPY_CLIENT_ID/SECRET
-        requests_timeout=15,
-        retries=3,
-    )
+def from_ytdlp_playlists(playlist_urls: list[str]) -> list[dict]:
+    import yt_dlp
     rows: list[dict] = []
-    for url in playlist_urls:
-        pid = url.rstrip("/").split("/")[-1].split("?")[0]
-        results = sp.playlist_items(pid, additional_types=("track",))
-        while results:
-            for it in results["items"]:
-                tr = it.get("track") or {}
-                if not tr.get("name") or not tr.get("artists"):
+    opts = {
+        "quiet": True,
+        "skip_download": True,
+        "extract_flat": False,  
+        "ignoreerrors": True,   
+    }
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        for url in playlist_urls:
+            info = ydl.extract_info(url, download=False)
+            for e in (info.get("entries") or []):
+                if not e:                
+                    continue
+                title = (e.get("title") or "").strip()
+                artist, sep, t = title.partition(" - ")
+                if sep:
+                    artist, title = artist.strip(), t.strip()
+                else:
+                    artist = (e.get("uploader") or e.get("channel") or "").strip()
+                if not title:
                     continue
                 rows.append({
-                    "artist": tr["artists"][0]["name"],
-                    "title": tr["name"],
+                    "artist": artist,
+                    "title": title,
                     "collective": None,
+                    "source_url": e.get("webpage_url") or e.get("url"),
                 })
-            results = sp.next(results) if results.get("next") else None
     return rows
 
 
@@ -55,17 +60,17 @@ def from_seeds_csv(path: Path) -> list[dict]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--playlists", nargs="*", default=[], help="URLs de playlists Spotify publiques")
+    ap.add_argument("--playlists", nargs="*", default=[], help="URLs de playlists yt / sc")
     ap.add_argument("--seeds", type=Path, default=None, help="CSV artist,title[,collective]")
     args = ap.parse_args()
 
     rows: list[dict] = []
     if args.playlists:
-        rows += from_spotify_playlists(args.playlists)
+        rows += from_ytdlp_playlists(args.playlists)
     if args.seeds and args.seeds.exists():
         rows += from_seeds_csv(args.seeds)
 
-    df = pd.DataFrame(rows, columns=["artist", "title", "collective"])
+    df = pd.DataFrame(rows, columns=["artist", "title", "collective", "source_url"])
     df["track_id"] = [make_track_id(a, t) for a, t in zip(df["artist"], df["title"])]
 
     df["_k"] = [f"{_norm(a)}::{_norm(t)}" for a, t in zip(df["artist"], df["title"])]
