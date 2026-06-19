@@ -9,8 +9,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pandas as pd
-import config
-from manifest import make_track_id, _norm
+import dataset.config as config
+from dataset.manifest import make_track_id, _norm
 
 
 def from_ytdlp_playlists(playlist_urls: list[str]) -> list[dict]:
