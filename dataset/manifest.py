@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-import dataset.config as config
+import config
 
 TRACK_COLUMNS = [
     "track_id",        

@@ -29,7 +29,7 @@ SR_CLAP = 48000
 SR_MUQ = 24000
 SR_W2V = 16000      
 
-CLAP_CKPT = "630k-audioset-best.pt"         
+CLAP_CKPT = str(Path.home() / ".cache" / "clap" / "630k-audioset-best.pt")     
 MUQ_CKPT = "OpenMuQ/MuQ-MuLan-large"
 W2V_FR_CKPT = "LeBenchmark/wav2vec2-FR-7K-large" 
 
