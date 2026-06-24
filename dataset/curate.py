@@ -9,8 +9,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pandas as pd
-import dataset.config as config
-from dataset.manifest import make_track_id, _norm
+import config
+from manifest import make_track_id, _norm
 
 
 def from_ytdlp_playlists(playlist_urls: list[str]) -> list[dict]:
@@ -62,6 +62,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--playlists", nargs="*", default=[], help="URLs de playlists yt / sc")
     ap.add_argument("--seeds", type=Path, default=None, help="CSV artist,title[,collective]")
+    ap.add_argument("--niche", default=None, help="étiquette de niche pour ce lot")
+
     args = ap.parse_args()
 
     rows: list[dict] = []
@@ -74,6 +76,7 @@ def main() -> None:
     df["track_id"] = [make_track_id(a, t) for a, t in zip(df["artist"], df["title"])]
 
     df["_k"] = [f"{_norm(a)}::{_norm(t)}" for a, t in zip(df["artist"], df["title"])]
+    df["niche"] = args.niche
     df = df.drop_duplicates("_k").drop(columns="_k").reset_index(drop=True)
 
     df.to_parquet(config.CURATED_LIST, index=False)

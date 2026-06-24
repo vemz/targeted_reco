@@ -10,8 +10,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-import dataset.config as config
-import dataset.manifest as manifest
+import config
+import manifest
 
 _PROD_RE = re.compile(
     r"prod(?:uced)?\.?\s*(?:by|par|:)?\s*([A-Za-z0-9 ._&'-]{2,40})",
@@ -99,6 +99,7 @@ def main() -> None:
             continue
         rec["track_id"] = r["track_id"]
         rec["collective"] = r.get("collective")
+        rec["niche"] = r.get("niche")
         tracks = manifest.upsert_track(tracks, rec)
         manifest.save_tracks(tracks) 
 

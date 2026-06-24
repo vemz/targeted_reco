@@ -18,7 +18,8 @@ TRACK_COLUMNS = [
     "duration_sec",
     "has_vocals",   
     "vocal_fraction", 
-    "status",        
+    "status", 
+    "niche",      
 ]
 
 SEGMENT_COLUMNS = [
